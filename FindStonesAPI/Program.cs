@@ -12,8 +12,8 @@ builder.Services.AddSwaggerGen();
 
 // Dependency Injektiolla välitetty tietokantatieto kontrollereille
 builder.Services.AddDbContext<FindStoneDBContext>(options => options.UseSqlServer(
-    //builder.Configuration.GetConnectionString("paikallinen")
-    builder.Configuration.GetConnectionString("pilvi")
+    builder.Configuration.GetConnectionString("paikallinen")
+    //builder.Configuration.GetConnectionString("pilvi")
     ));
 
 

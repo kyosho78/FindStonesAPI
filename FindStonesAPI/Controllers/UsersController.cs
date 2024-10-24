@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FindStonesAPI.Models;
+using Microsoft.CodeAnalysis.Scripting;
+using FindStonesAPI.Controllers.DTOs;
+
 
 namespace FindStonesAPI.Controllers
 {
@@ -82,19 +85,55 @@ namespace FindStonesAPI.Controllers
         }
 
         // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("register")]
         public async Task<ActionResult<User>> PostUser(User user)
         {
-          if (_context.Users == null)
-          {
-              return Problem("Entity set 'FindStoneDBContext.Users'  is null.");
-          }
+            if (_context.Users == null)
+            {
+                return Problem("Entity set 'FindStoneDBContext.Users' is null.");
+            }
+
+            // Check if the username or email already exists
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == user.Username || u.Email == user.Email);
+
+            if (existingUser != null)
+            {
+                return Conflict("Username or email already exists.");
+            }
+
+            // Hash the user's password before saving
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);  // Using BCrypt for hashing
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetUser", new { id = user.UserId }, user);
         }
+
+
+        // POST: api/Users/login
+        [HttpPost("login")]
+        public async Task<ActionResult<string>> Login(UserLoginDto loginDto)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Verify the password
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            {
+                return Unauthorized("Invalid password.");
+            }
+
+            // Return some token or success message (you can implement JWT here)
+            return Ok("Login successful!");
+        }
+
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
