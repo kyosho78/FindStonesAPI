@@ -24,10 +24,11 @@ namespace FindStonesAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ItemHistory>>> GetItemHistories()
         {
-          if (_context.ItemHistories == null)
-          {
-              return NotFound();
-          }
+            if (_context.ItemHistories == null)
+            {
+                return NotFound();
+            }
+
             return await _context.ItemHistories.ToListAsync();
         }
 
@@ -35,10 +36,11 @@ namespace FindStonesAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ItemHistory>> GetItemHistory(int id)
         {
-          if (_context.ItemHistories == null)
-          {
-              return NotFound();
-          }
+            if (_context.ItemHistories == null)
+            {
+                return NotFound();
+            }
+
             var itemHistory = await _context.ItemHistories.FindAsync(id);
 
             if (itemHistory == null)
@@ -50,13 +52,18 @@ namespace FindStonesAPI.Controllers
         }
 
         // PUT: api/ItemHistories/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutItemHistory(int id, ItemHistory itemHistory)
         {
             if (id != itemHistory.HistoryId)
             {
-                return BadRequest();
+                return BadRequest("History ID mismatch.");
+            }
+
+            // Ensure the referenced item exists
+            if (!_context.Items.Any(i => i.ItemId == itemHistory.ItemId))
+            {
+                return BadRequest("Invalid Item ID. The referenced item does not exist.");
             }
 
             _context.Entry(itemHistory).State = EntityState.Modified;
@@ -81,14 +88,29 @@ namespace FindStonesAPI.Controllers
         }
 
         // POST: api/ItemHistories
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<ItemHistory>> PostItemHistory(ItemHistory itemHistory)
         {
-          if (_context.ItemHistories == null)
-          {
-              return Problem("Entity set 'FindStoneDBContext.ItemHistories'  is null.");
-          }
+            if (_context.ItemHistories == null)
+            {
+                return Problem("Entity set 'FindStoneDBContext.ItemHistories' is null.");
+            }
+
+            // Ensure the referenced item exists
+            if (!_context.Items.Any(i => i.ItemId == itemHistory.ItemId))
+            {
+                return BadRequest("Invalid Item ID. The referenced item does not exist.");
+            }
+
+            // Additional validation (optional)
+            if (string.IsNullOrEmpty(itemHistory.ChangeType))
+            {
+                return BadRequest("Change type is required.");
+            }
+
+            // Set created timestamp
+            itemHistory.CreatedAt = DateTime.UtcNow;
+
             _context.ItemHistories.Add(itemHistory);
             await _context.SaveChangesAsync();
 
@@ -103,6 +125,7 @@ namespace FindStonesAPI.Controllers
             {
                 return NotFound();
             }
+
             var itemHistory = await _context.ItemHistories.FindAsync(id);
             if (itemHistory == null)
             {
@@ -117,7 +140,7 @@ namespace FindStonesAPI.Controllers
 
         private bool ItemHistoryExists(int id)
         {
-            return (_context.ItemHistories?.Any(e => e.HistoryId == id)).GetValueOrDefault();
+            return _context.ItemHistories?.Any(e => e.HistoryId == id) ?? false;
         }
     }
 }

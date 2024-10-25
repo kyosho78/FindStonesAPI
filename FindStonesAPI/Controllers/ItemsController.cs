@@ -81,19 +81,14 @@ namespace FindStonesAPI.Controllers
         }
 
         // POST: api/Items
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Item>> PostItem(Item item)
+        public async Task<ActionResult<Item>> PostItem(Item newItem)
         {
-          if (_context.Items == null)
-          {
-              return Problem("Entity set 'FindStoneDBContext.Items'  is null.");
-          }
-            _context.Items.Add(item);
+            _context.Items.Add(newItem);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetItem", new { id = item.ItemId }, item);
+            return CreatedAtAction(nameof(GetItem), new { id = newItem.ItemId }, newItem);
         }
+
 
         // DELETE: api/Items/5
         [HttpDelete("{id}")]

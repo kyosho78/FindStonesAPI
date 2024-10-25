@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FindStonesAPI.Models;
 
@@ -24,10 +19,10 @@ namespace FindStonesAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Location>>> GetLocations()
         {
-          if (_context.Locations == null)
-          {
-              return NotFound();
-          }
+            if (_context.Locations == null)
+            {
+                return NotFound();
+            }
             return await _context.Locations.ToListAsync();
         }
 
@@ -35,10 +30,11 @@ namespace FindStonesAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Location>> GetLocation(int id)
         {
-          if (_context.Locations == null)
-          {
-              return NotFound();
-          }
+            if (_context.Locations == null)
+            {
+                return NotFound();
+            }
+
             var location = await _context.Locations.FindAsync(id);
 
             if (location == null)
@@ -49,8 +45,22 @@ namespace FindStonesAPI.Controllers
             return location;
         }
 
+        // POST: api/Locations
+        [HttpPost]
+        public async Task<ActionResult<Location>> PostLocation(Location newLocation)
+        {
+            if (_context.Locations == null)
+            {
+                return Problem("Entity set 'FindStoneDBContext.Locations'  is null.");
+            }
+
+            _context.Locations.Add(newLocation);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetLocation), new { id = newLocation.LocationId }, newLocation);
+        }
+
         // PUT: api/Locations/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutLocation(int id, Location location)
         {
@@ -80,21 +90,6 @@ namespace FindStonesAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Locations
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Location>> PostLocation(Location location)
-        {
-          if (_context.Locations == null)
-          {
-              return Problem("Entity set 'FindStoneDBContext.Locations'  is null.");
-          }
-            _context.Locations.Add(location);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetLocation", new { id = location.LocationId }, location);
-        }
-
         // DELETE: api/Locations/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLocation(int id)
@@ -103,6 +98,7 @@ namespace FindStonesAPI.Controllers
             {
                 return NotFound();
             }
+
             var location = await _context.Locations.FindAsync(id);
             if (location == null)
             {

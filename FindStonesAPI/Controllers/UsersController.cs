@@ -112,26 +112,33 @@ namespace FindStonesAPI.Controllers
         }
 
 
-        // POST: api/Users/login
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login(UserLoginDto loginDto)
+        public async Task<ActionResult<LoginResponseDto>> Login(UserLoginDto loginDto)
         {
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
 
             if (user == null)
             {
-                return NotFound("User not found.");
+                return NotFound(new { Message = "User not found." });
             }
 
             // Verify the password
             if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
-                return Unauthorized("Invalid password.");
+                return Unauthorized(new { Message = "Invalid password." });
             }
 
-            return Ok("Login successful!");
+            // Return a proper JSON response with user details (UserId, etc.)
+            var loginResponse = new LoginResponseDto
+            {
+                UserId = user.UserId,
+                Message = "Login successful!"
+            };
+
+            return Ok(loginResponse);
         }
+
 
 
         // DELETE: api/Users/5
