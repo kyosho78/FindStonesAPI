@@ -130,7 +130,6 @@ namespace FindStonesAPI.Controllers
                 return Unauthorized("Invalid password.");
             }
 
-            // Return some token or success message (you can implement JWT here)
             return Ok("Login successful!");
         }
 
